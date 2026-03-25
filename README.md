@@ -50,112 +50,75 @@ npm install
 npm run dev
 
 
-# Authorization Middleware – RBAC Implementation
-
-## 📌 Overview
-
-This project implements **Role-Based Access Control (RBAC)** using custom authorization middleware.
-The middleware ensures that only users with appropriate roles can access protected routes.
 
 ---
 
-## 🔐 RBAC Roles
+# ⚙️ File Upload Flow (Pre-Signed URL)
 
-| Role      | Permissions                                |
-| --------- | ------------------------------------------ |
-| Admin     | Full access (Create, Read, Update, Delete) |
-| Volunteer | Limited access (Read, Update)              |
-| User      | Basic access (Read only)                   |
+The upload process follows these steps:
+
+1. Client requests a pre-signed upload URL from the backend.
+2. Backend generates a temporary secure URL.
+3. Client uploads the file directly to cloud storage using this URL.
+4. The storage service validates and stores the file.
+
+### Flow Diagram
+
+Client → Backend → Generate Pre-Signed URL → Upload to Storage → File Stored
 
 ---
 
-## ⚙️ Middleware Logic
+# 📂 File Validation
 
-The authorization middleware works as follows:
+To ensure safe uploads, the API validates files before generating upload URLs.
 
-1. Extract user role from request (JWT/session)
-2. Compare role with required route permissions
-3. Allow request if role is authorized
-4. Deny request if role is not authorized
+### Validation Checks
 
-### Example Middleware
+* Allowed file types (e.g., JPG, PNG, PDF)
+* File size limits
+* File name sanitization
+
+### Example Validation Code
 
 ```js
-const authorize = (allowedRoles) => {
-  return (req, res, next) => {
-    const userRole = req.user.role;
+const allowedTypes = ["image/jpeg", "image/png", "application/pdf"];
 
-    if (!allowedRoles.includes(userRole)) {
-      return res.status(403).json({ message: "Access Denied" });
-    }
-
-    next();
-  };
-};
+if (!allowedTypes.includes(fileType)) {
+  return res.status(400).json({ message: "Invalid file type" });
+}
 ```
 
 ---
 
-## ✅ Allowed Access Example
+# 🔐 Security Considerations
 
-Route:
+This system improves security by:
 
-```
-GET /admin/dashboard
-```
+* Using **temporary pre-signed URLs**
+* Preventing direct server uploads
+* Restricting **file types**
+* Limiting **upload permissions**
+* Preventing unauthorized access
 
-Allowed Roles:
-
-* Admin
-
-Result:
-
-* Admin → Access Granted
-* Volunteer → Access Denied
-* User → Access Denied
+Pre-signed URLs expire after a short time to prevent misuse.
 
 ---
 
-## ❌ Denied Access Example
+# 🚀 How to Run the Project
 
-Route:
+Install dependencies:
 
-```
-DELETE /users
-```
-
-Allowed Roles:
-
-* Admin
-
-Result:
-
-* Volunteer tries → 403 Forbidden
-
----
-
-## 🛡️ Least Privilege Principle
-
-This project follows the **Least Privilege Principle**, meaning:
-
-* Users only get **minimum permissions required**
-* Prevents security risks
-* Improves system safety
-
----
-
-## 🚀 How to Run
-
-```bash
 npm install
-npm start
-```
+
+Start the server:
+
+npm run dev
 
 ---
 
-## 📌 Future Improvements
+# 📌 Future Improvements
 
-* Dynamic role management
-* Permission-based RBAC (not only role-based)
-* Admin dashboard for role control
+* Add file size validation
+* Add malware scanning
+* Implement user authentication before uploads
 
