@@ -51,74 +51,97 @@ npm run dev
 
 
 
----
+# Redis Caching Layer Implementation
 
-# ⚙️ File Upload Flow (Pre-Signed URL)
+## 📌 Overview
 
-The upload process follows these steps:
-
-1. Client requests a pre-signed upload URL from the backend.
-2. Backend generates a temporary secure URL.
-3. Client uploads the file directly to cloud storage using this URL.
-4. The storage service validates and stores the file.
-
-### Flow Diagram
-
-Client → Backend → Generate Pre-Signed URL → Upload to Storage → File Stored
+This project implements a **Redis caching layer** to improve API performance and reduce database load.
+The caching follows the **Cache-Aside (Lazy Loading) strategy**.
 
 ---
 
-# 📂 File Validation
+# ⚙️ Caching Strategy (Cache-Aside)
 
-To ensure safe uploads, the API validates files before generating upload URLs.
+Flow:
 
-### Validation Checks
+1. Client requests data
+2. Server checks Redis cache
+3. If cache exists → return cached data (Cache Hit)
+4. If cache missing → fetch from database (Cache Miss)
+5. Store result in Redis with TTL
+6. Return response
 
-* Allowed file types (e.g., JPG, PNG, PDF)
-* File size limits
-* File name sanitization
+---
 
-### Example Validation Code
+# 📦 Cached Resources
+
+Currently cached:
+
+* User profile data
+* Dashboard statistics
+* Frequently accessed API responses
+
+---
+
+# ⏳ TTL Policy
+
+* User Data → 5 minutes
+* Dashboard Data → 2 minutes
+* Static Resources → 10 minutes
+
+TTL ensures:
+
+* Fresh data
+* Automatic cache invalidation
+
+---
+
+# 🔄 Cache Invalidation Strategy
+
+Cache is cleared when:
+
+* User updates profile
+* Admin updates dashboard data
+* Resource is deleted
+
+Example:
 
 ```js
-const allowedTypes = ["image/jpeg", "image/png", "application/pdf"];
-
-if (!allowedTypes.includes(fileType)) {
-  return res.status(400).json({ message: "Invalid file type" });
-}
+await redis.del(`user:${userId}`);
 ```
 
 ---
 
-# 🔐 Security Considerations
+# 💻 Redis Integration Example
 
-This system improves security by:
+```js
+const cachedData = await redis.get(`user:${id}`);
 
-* Using **temporary pre-signed URLs**
-* Preventing direct server uploads
-* Restricting **file types**
-* Limiting **upload permissions**
-* Preventing unauthorized access
+if (cachedData) {
+  return res.json(JSON.parse(cachedData));
+}
 
-Pre-signed URLs expire after a short time to prevent misuse.
+const user = await db.findUser(id);
+await redis.set(`user:${id}`, JSON.stringify(user), "EX", 300);
+
+res.json(user);
+```
 
 ---
 
-# 🚀 How to Run the Project
+# 🚀 Performance Benefits
 
-Install dependencies:
+* Reduces database load
+* Faster API response time
+* Improves scalability
+* Better user experience
+
+---
+
+# 🛠️ Run Project
 
 npm install
-
-Start the server:
-
 npm run dev
 
----
-
-# 📌 Future Improvements
-
-* Add file size validation
-* Add malware scanning
-* Implement user authentication before uploads
+Ensure Redis server is running.
 
