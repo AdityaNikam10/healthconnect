@@ -145,3 +145,105 @@ npm run dev
 
 Ensure Redis server is running.
 
+
+# Input Sanitization & OWASP Compliance
+
+## 📌 Overview
+
+This project implements **input sanitization and encoding mechanisms** to prevent common web vulnerabilities such as:
+
+* Cross-Site Scripting (XSS)
+* SQL Injection (SQLi)
+
+The implementation follows **OWASP Secure Coding Guidelines**.
+
+---
+
+# 🛠️ Sanitization Utilities Used
+
+* express-validator → Input validation
+* DOMPurify → HTML sanitization
+* Parameterized Queries → SQL Injection prevention
+* Helmet → Secure HTTP headers
+
+---
+
+# ⚠️ XSS Attack Prevention
+
+### ❌ Before Sanitization
+
+User Input:
+
+```html
+<script>alert("Hacked")</script>
+```
+
+Stored in DB → Executed in browser → XSS attack
+
+### ✅ After Sanitization
+
+Sanitized Output:
+
+```html
+&lt;script&gt;alert("Hacked")&lt;/script&gt;
+```
+
+Script execution prevented.
+
+---
+
+# ⚠️ SQL Injection Prevention
+
+### ❌ Vulnerable Query
+
+```js
+const query = "SELECT * FROM users WHERE email = '" + email + "'";
+```
+
+Attack Input:
+
+```
+' OR 1=1 --
+```
+
+Result → Unauthorized data access
+
+---
+
+### ✅ Secure Query (Parameterized)
+
+```js
+const user = await db.query(
+  "SELECT * FROM users WHERE email = ?",
+  [email]
+);
+```
+
+Injection prevented.
+
+---
+
+# 🔐 OWASP Compliance Practices
+
+* Input validation on all endpoints
+* Output encoding before rendering
+* Use of secure headers
+* Avoid dynamic SQL queries
+* Principle of least privilege in DB access
+
+---
+
+# 🚀 Security Benefits
+
+* Prevents client-side script execution
+* Protects database integrity
+* Reduces attack surface
+* Improves application trust
+
+---
+
+# 🛠️ Run Project
+
+npm install
+npm start
+
